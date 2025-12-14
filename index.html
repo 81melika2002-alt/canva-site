@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="fa" dir="rtl" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شبیه‌ساز فتوولتائیک با خنک‌سازی آبی</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="main-container" class="min-h-full w-full overflow-auto" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+   <div class="container mx-auto px-4 py-8 max-w-7xl"><!-- Header -->
+    <div class="text-center mb-8 fade-in">
+     <h1 id="app-title" class="text-4xl font-bold text-white mb-3">شبیه‌ساز فتوولتائیک با خنک‌سازی آبی</h1>
+     <p class="text-blue-100 text-lg">پلی‌کریستالین 65 وات - راندمان 20% - لوله استنلس استیل 316</p>
+    </div><!-- Input Form -->
+    <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8 fade-in">
+     <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+      <svg class="w-7 h-7 ml-3 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg> پارامترهای ورودی</h2>
+     <form id="simulationForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div><label for="latitude" class="block text-sm font-semibold text-gray-700 mb-2">عرض جغرافیایی (°)</label> <input type="number" id="latitude" step="0.0001" value="35.6892" required class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500">
+      </div>
+      <div><label for="longitude" class="block text-sm font-semibold text-gray-700 mb-2">طول جغرافیایی (°)</label> <input type="number" id="longitude" step="0.0001" value="51.3890" required class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500">
+      </div>
+      <div><label for="panelAngle" class="block text-sm font-semibold text-gray-700 mb-2">زاویه پنل نسبت به جنوب (°)</label> <input type="number" id="panelAngle" step="0.1" value="35" min="0" max="90" required class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500">
+      </div>
+      <div><label for="date" class="block text-sm font-semibold text-gray-700 mb-2">تاریخ</label> <input type="date" id="date" required class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500">
+      </div>
+      <div><label for="time" class="block text-sm font-semibold text-gray-700 mb-2">ساعت</label> <input type="time" id="time" required class="input-field w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="md:col-span-2 lg:col-span-1"><label class="block text-sm font-semibold text-gray-700 mb-2">&nbsp;</label> <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"> محاسبه و شبیه‌سازی </button>
+      </div>
+     </form>
+    </div><!-- Loading State -->
+    <div id="loadingState" class="hidden text-center py-12">
+     <div class="loading-spinner mx-auto mb-4"></div>
+     <p class="text-white text-lg font-semibold">در حال محاسبه و شبیه‌سازی...</p>
+    </div><!-- Results Section -->
+    <div id="resultsSection" class="hidden fade-in"><!-- Panel Specifications -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-indigo-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+       </svg> مشخصات فنی پنل خورشیدی</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+       <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">نوع پنل</p>
+        <p class="text-purple-700 font-bold">پلی‌کریستالین</p>
+       </div>
+       <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">توان نامی</p>
+        <p class="text-green-700 font-bold">65 وات</p>
+       </div>
+       <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">راندمان STC</p>
+        <p class="text-blue-700 font-bold">20%</p>
+       </div>
+       <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">مساحت</p>
+        <p class="text-amber-700 font-bold">0.55 m²</p>
+       </div>
+       <div class="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">V<sub>oc</sub></p>
+        <p class="text-red-700 font-bold">21-22 V</p>
+       </div>
+       <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">I<sub>sc</sub></p>
+        <p class="text-cyan-700 font-bold">3.8-4.2 A</p>
+       </div>
+       <div class="bg-gradient-to-br from-teal-50 to-teal-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">V<sub>mpp</sub></p>
+        <p class="text-teal-700 font-bold">17-18 V</p>
+       </div>
+       <div class="bg-gradient-to-br from-lime-50 to-lime-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">I<sub>mpp</sub></p>
+        <p class="text-lime-700 font-bold">3.6-3.8 A</p>
+       </div>
+       <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">دمای کارکرد</p>
+        <p class="text-orange-700 font-bold">-40 تا +85°C</p>
+       </div>
+       <div class="bg-gradient-to-br from-pink-50 to-pink-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">ضریب دمایی توان</p>
+        <p class="text-pink-700 font-bold">-0.5%/°C</p>
+       </div>
+       <div class="bg-gradient-to-br from-violet-50 to-violet-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">لوله خنک‌کننده</p>
+        <p class="text-violet-700 font-bold">SS 316</p>
+       </div>
+       <div class="bg-gradient-to-br from-sky-50 to-sky-100 p-4 rounded-lg">
+        <p class="text-gray-600 mb-1 font-semibold">شرایط تست</p>
+        <p class="text-sky-700 font-bold">STC: 1000 W/m²</p>
+       </div>
+      </div>
+     </div><!-- Weather Data -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-yellow-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+       </svg> داده‌های هواشناسی</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+       <div class="result-card bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">دمای محیط</p>
+        <p id="temp" class="text-3xl font-bold text-orange-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">رطوبت</p>
+        <p id="humidity" class="text-3xl font-bold text-blue-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">سرعت باد</p>
+        <p id="windSpeed" class="text-3xl font-bold text-gray-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">تابش کل</p>
+        <p id="irradiance" class="text-3xl font-bold text-yellow-600">--</p>
+       </div>
+      </div>
+     </div><!-- Solar Radiation -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-yellow-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+       </svg> تحلیل تابش خورشیدی</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+       <div class="result-card bg-gradient-to-br from-yellow-50 to-amber-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">تابش مستقیم</p>
+        <p id="directIrradiance" class="text-2xl font-bold text-amber-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-sky-50 to-sky-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">تابش پراکنده</p>
+        <p id="diffuseIrradiance" class="text-2xl font-bold text-sky-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">زاویه ارتفاع</p>
+        <p id="solarAngle" class="text-2xl font-bold text-purple-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-pink-50 to-pink-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">آزیموت خورشید</p>
+        <p id="solarAzimuth" class="text-2xl font-bold text-pink-600">--</p>
+       </div>
+      </div>
+     </div><!-- Cooling System Parameters -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-cyan-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+       </svg> پارامترهای سیستم خنک‌سازی</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+       <div class="result-card bg-gradient-to-br from-cyan-50 to-cyan-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">دمای آب ورودی</p>
+        <p id="waterTempIn" class="text-2xl font-bold text-cyan-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">دمای آب خروجی</p>
+        <p id="waterTempOut" class="text-2xl font-bold text-blue-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-teal-50 to-teal-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">دبی آب</p>
+        <p id="flowRate" class="text-2xl font-bold text-teal-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">دمای پنل</p>
+        <p id="panelTemp" class="text-2xl font-bold text-indigo-600">--</p>
+       </div>
+      </div>
+     </div><!-- Energy Balance -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-red-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> بالانس انرژی</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+       <div class="result-card bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">انرژی خورشیدی</p>
+        <p id="solarEnergy" class="text-2xl font-bold text-yellow-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">تلفات حرارتی</p>
+        <p id="heatLoss" class="text-2xl font-bold text-red-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">خنک‌سازی آب</p>
+        <p id="waterCooling" class="text-2xl font-bold text-blue-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">توان حرارتی</p>
+        <p id="thermalPower" class="text-2xl font-bold text-orange-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">راندمان حرارتی</p>
+        <p id="thermalEfficiency" class="text-2xl font-bold text-purple-600">--</p>
+       </div>
+      </div>
+     </div><!-- MPPT Results -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-green-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+       </svg> نقطه بیشینه توان (MPPT)</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+       <div class="result-card bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">توان الکتریکی</p>
+        <p id="maxPower" class="text-2xl font-bold text-green-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">ولتاژ MPPT</p>
+        <p id="mpptVoltage" class="text-2xl font-bold text-emerald-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-lime-50 to-lime-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">جریان MPPT</p>
+        <p id="mpptCurrent" class="text-2xl font-bold text-lime-600">--</p>
+       </div>
+       <div class="result-card bg-gradient-to-br from-teal-50 to-teal-100 p-6 rounded-xl">
+        <p class="text-sm text-gray-600 mb-2">راندمان الکتریکی</p>
+        <p id="electricalEfficiency" class="text-2xl font-bold text-teal-600">--</p>
+       </div>
+      </div>
+     </div><!-- I-V Curve Chart -->
+     <div class="glass-effect rounded-2xl shadow-2xl p-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+       <svg class="w-7 h-7 ml-3 text-purple-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+       </svg> منحنی جریان-ولتاژ (I-V) و توان</h2>
+      <div class="bg-white p-6 rounded-xl">
+       <canvas id="ivChart"></canvas>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Config Management for Element SDK
+        const defaultConfig = {
+            app_title: 'شبیه‌ساز فتوولتائیک با خنک‌سازی آبی',
+            background_color: '#667eea',
+            font_family: 'Vazirmatn',
+            font_size: 16
+        };
+
+        let chartInstance = null;
+
+        async function onConfigChange(config) {
+            const title = config.app_title || defaultConfig.app_title;
+            document.getElementById('app-title').textContent = title;
+            
+            const bgColor = config.background_color || defaultConfig.background_color;
+            document.querySelector('.min-h-full').style.background = `linear-gradient(135deg, ${bgColor} 0%, #764ba2 100%)`;
+            
+            const customFont = config.font_family || defaultConfig.font_family;
+            const baseFontStack = 'Vazirmatn, sans-serif';
+            document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+            
+            const baseSize = config.font_size || 16;
+            document.documentElement.style.fontSize = `${baseSize}px`;
+        }
+
+        function mapToCapabilities(config) {
+            return {
+                recolorables: [
+                    {
+                        get: () => config.background_color || defaultConfig.background_color,
+                        set: (value) => {
+                            config.background_color = value;
+                            window.elementSdk.setConfig({ background_color: value });
+                        }
+                    }
+                ],
+                borderables: [],
+                fontEditable: {
+                    get: () => config.font_family || defaultConfig.font_family,
+                    set: (value) => {
+                        config.font_family = value;
+                        window.elementSdk.setConfig({ font_family: value });
+                    }
+                },
+                fontSizeable: {
+                    get: () => config.font_size || 16,
+                    set: (value) => {
+                        config.font_size = value;
+                        window.elementSdk.setConfig({ font_size: value });
+                    }
+                }
+            };
+        }
+
+        function mapToEditPanelValues(config) {
+            return new Map([
+                ['app_title', config.app_title || defaultConfig.app_title]
+            ]);
+        }
+
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange,
+                mapToCapabilities,
+                mapToEditPanelValues
+            });
+        }
+
+        // Set default date and time
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('time').value = new Date().toTimeString().slice(0, 5);
+
+        // Calculate Solar Position
+        function calculateSolarPosition(latitude, longitude, date, hours, minutes) {
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            
+            // Solar declination
+            const declination = 23.45 * Math.sin((360 / 365) * (dayOfYear - 81) * Math.PI / 180);
+            
+            // Equation of time
+            const B = (360 / 365) * (dayOfYear - 81);
+            const EOT = -7.66 * Math.sin(B * Math.PI / 180) - 9.87 * Math.sin(2 * B * Math.PI / 180 + 3.59);
+            
+            // Solar time
+            const localTimeDecimal = hours + minutes / 60;
+            const standardMeridian = 52.5;
+            const longitudeCorrection = (longitude - standardMeridian) * 4;
+            const solarTimeDecimal = localTimeDecimal + (EOT + longitudeCorrection) / 60;
+            
+            // Hour angle
+            const hourAngle = 15 * (solarTimeDecimal - 12);
+            
+            // Solar elevation
+            const solarElevation = Math.asin(
+                Math.sin(latitude * Math.PI / 180) * Math.sin(declination * Math.PI / 180) +
+                Math.cos(latitude * Math.PI / 180) * Math.cos(declination * Math.PI / 180) * Math.cos(hourAngle * Math.PI / 180)
+            ) * 180 / Math.PI;
+            
+            // Solar azimuth
+            const solarAzimuth = 
+                (Math.atan2(
+                    Math.sin(hourAngle * Math.PI / 180),
+                    Math.cos(hourAngle * Math.PI / 180) * Math.sin(latitude * Math.PI / 180) -
+                    Math.tan(declination * Math.PI / 180) * Math.cos(latitude * Math.PI / 180)
+                ) * 180 / Math.PI + 180) % 360;
+            
+            return {
+                elevation: solarElevation,
+                azimuth: solarAzimuth,
+                declination: declination,
+                hourAngle: hourAngle
+            };
+        }
+
+        // Calculate Radiation
+        function calculateRadiation(solarPosition, panelAngle, totalIrradiance) {
+            const elevation = solarPosition.elevation;
+            const azimuth = solarPosition.azimuth;
+            
+            if (elevation <= 0) {
+                return {
+                    direct: 0,
+                    diffuse: 0,
+                    total: 0
+                };
+            }
+            
+            // Diffuse fraction calculation
+            const kt = totalIrradiance / (1367 * Math.sin(elevation * Math.PI / 180));
+            let diffuseFraction;
+            
+            if (kt <= 0.22) {
+                diffuseFraction = 1.0 - 0.09 * kt;
+            } else if (kt <= 0.8) {
+                diffuseFraction = 0.9511 - 0.1604*kt + 4.388*kt*kt - 16.638*kt*kt*kt + 12.336*kt*kt*kt*kt;
+            } else {
+                diffuseFraction = 0.165;
+            }
+            
+            const directIrradiance = totalIrradiance * (1 - diffuseFraction);
+            const diffuseIrradiance = totalIrradiance * diffuseFraction;
+            
+            // Incidence angle calculation
+            const elevRad = elevation * Math.PI / 180;
+            const azRad = azimuth * Math.PI / 180;
+            const tiltRad = panelAngle * Math.PI / 180;
+            const panelAzRad = 180 * Math.PI / 180; // Panel facing south
+            
+            const cosTheta = Math.sin(elevRad) * Math.cos(tiltRad) +
+                           Math.cos(elevRad) * Math.sin(tiltRad) * Math.cos(azRad - panelAzRad);
+            
+            const effectiveDirect = Math.max(0, directIrradiance * cosTheta);
+            
+            return {
+                direct: effectiveDirect,
+                diffuse: diffuseIrradiance,
+                total: effectiveDirect + diffuseIrradiance
+            };
+        }
+
+        // Calculate Cooling with Energy Balance
+        function calculateCoolingEnergyBalance(irradiance, ambientTemp, windSpeed, panelArea) {
+            // Physical constants
+            const cp_w = 4186; // J/kg·K - specific heat of water
+            const Cp_panel = 1500; // J/K - thermal capacity of panel
+            const U_loss = 15; // W/m²·K - heat loss coefficient
+            const eta_pv = 0.18; // base PV efficiency (راندمان پایه)
+            const beta = 0.004; // temperature coefficient (ضریب دمایی)
+            const dt = 60; // timestep in seconds
+            
+            let waterTempIn = 0;
+            let flowRate = 0; // L/min
+            let m_dot = 0; // kg/s
+            let panelTemp = ambientTemp;
+            let waterTempOut = 0;
+            let Q_solar = 0;
+            let Q_loss = 0;
+            let Q_cooling = 0;
+            let Q_thermal = 0;
+            let eta_elec = eta_pv;
+            let eta_thermal = 0;
+            let coolingActive = false;
+            
+            // Initial panel temperature without cooling
+            const u0 = 25.0;
+            const u1 = 6.84;
+            const initialPanelTemp = ambientTemp + irradiance / (u0 + u1 * windSpeed);
+            
+            if (initialPanelTemp > 35 && irradiance > 200) {
+                coolingActive = true;
+                
+                // Water inlet temperature
+                waterTempIn = Math.max(15, ambientTemp - 7);
+                
+                // Flow rate based on temperature difference and irradiance
+                const tempDiff = initialPanelTemp - 35;
+                const irradianceRatio = irradiance / 1000;
+                flowRate = 0.3 + (tempDiff * 0.03) + (irradianceRatio * 0.4);
+                flowRate = Math.min(2.0, Math.max(0.3, flowRate));
+                
+                // Convert L/min to kg/s (assuming water density = 1 kg/L)
+                m_dot = flowRate / 60.0;
+                
+                // Iterative energy balance calculation
+                panelTemp = initialPanelTemp;
+                
+                for (let iter = 0; iter < 10; iter++) {
+                    // Energy absorbed from solar radiation
+                    Q_solar = irradiance * panelArea * eta_pv;
+                    
+                    // Heat loss to ambient
+                    Q_loss = U_loss * panelArea * (panelTemp - ambientTemp);
+                    
+                    // Cooling by water
+                    Q_cooling = m_dot * cp_w * (panelTemp - waterTempIn);
+                    
+                    // Temperature change
+                    const dT = (Q_solar - Q_loss - Q_cooling) * dt / Cp_panel;
+                    panelTemp += dT * 0.1; // Relaxation factor for stability
+                    
+                    // Ensure physical bounds
+                    panelTemp = Math.max(waterTempIn + 2, Math.min(panelTemp, initialPanelTemp));
+                }
+                
+                // Water outlet temperature
+                if (m_dot > 0) {
+                    waterTempOut = waterTempIn + Q_cooling / (m_dot * cp_w);
+                } else {
+                    waterTempOut = waterTempIn;
+                }
+                
+                // Thermal energy (توان حرارتی)
+                Q_thermal = m_dot * cp_w * (waterTempOut - waterTempIn);
+                
+                // Thermal efficiency (راندمان حرارتی)
+                const totalSolarInput = irradiance * panelArea;
+                if (totalSolarInput > 0) {
+                    eta_thermal = (Q_thermal / totalSolarInput) * 100;
+                }
+                
+                // Electrical efficiency with temperature correction
+                eta_elec = eta_pv * (1 - beta * (panelTemp - 25));
+                
+            } else {
+                panelTemp = initialPanelTemp;
+                Q_solar = irradiance * panelArea * eta_pv;
+                Q_loss = U_loss * panelArea * (panelTemp - ambientTemp);
+                Q_thermal = 0;
+                eta_thermal = 0;
+            }
+            
+            return {
+                waterTempIn: waterTempIn,
+                waterTempOut: waterTempOut,
+                flowRate: flowRate,
+                panelTemp: panelTemp,
+                Q_solar: Q_solar,
+                Q_loss: Q_loss,
+                Q_cooling: Q_cooling,
+                Q_thermal: Q_thermal,
+                eta_elec: eta_elec,
+                eta_thermal: eta_thermal,
+                active: coolingActive
+            };
+        }
+
+        // Calculate MPPT using Golden Section Search
+        function calculateMPPT(voc, isc, panelTemp) {
+            const n = 1.3;
+            const Vt = 0.026 * (panelTemp + 273.15) / 298.15;
+            const Rs = 0.15;
+            const Rsh = 1000;
+            
+            // Pre-calculate constant term to avoid repetition
+            const I0_normalized = 1 / (Math.exp(voc / (n * Vt)) - 1);
+            
+            function calculateCurrent(V) {
+                if (V >= voc) return 0;
+                if (V <= 0) return isc;
+                
+                let I = isc * (1 - V / voc);
+                for (let iter = 0; iter < 10; iter++) {
+                    const Vd = V + I * Rs;
+                    const expTerm = Math.exp(Vd / (n * Vt));
+                    const I_diode = isc * (expTerm - 1) * I0_normalized;
+                    const I_shunt = Vd / Rsh;
+                    const I_new = isc - I_diode - I_shunt;
+                    
+                    if (Math.abs(I_new - I) < 1e-6) break;
+                    I = Math.max(0, I_new);
+                }
+                return Math.max(0, I);
+            }
+            
+            // Golden section search
+            const phi = (1 + Math.sqrt(5)) / 2;
+            const tolerance = 1e-6;
+            
+            let a = 0;
+            let b = voc;
+            let c = b - (b - a) / phi;
+            let d = a + (b - a) / phi;
+            
+            function powerAtVoltage(v) {
+                return v * calculateCurrent(v);
+            }
+            
+            while (Math.abs(b - a) > tolerance) {
+                if (powerAtVoltage(c) > powerAtVoltage(d)) {
+                    b = d;
+                } else {
+                    a = c;
+                }
+                c = b - (b - a) / phi;
+                d = a + (b - a) / phi;
+            }
+            
+            const vmpp = (a + b) / 2;
+            const impp = calculateCurrent(vmpp);
+            const pmpp = vmpp * impp;
+            
+            return {
+                voltage: vmpp,
+                current: impp,
+                power: pmpp,
+                calculateCurrent: calculateCurrent
+            };
+        }
+
+        // Draw I-V Curve
+        function drawIVCurve(voc, isc, vmpp, impp, pmpp, panelTemp) {
+            const n = 1.3;
+            const Vt = 0.026 * (panelTemp + 273.15) / 298.15;
+            const Rs = 0.15;
+            const Rsh = 1000;
+            
+            // Pre-calculate constant term to avoid repetition
+            const I0_normalized = 1 / (Math.exp(voc / (n * Vt)) - 1);
+            
+            const voltages = [];
+            const currents = [];
+            const powers = [];
+            
+            for (let v = 0; v <= voc * 1.05; v += voc / 200) {
+                voltages.push(v);
+                
+                let I = isc * (1 - v / voc);
+                for (let iter = 0; iter < 10; iter++) {
+                    const Vd = v + I * Rs;
+                    const expTerm = Math.exp(Vd / (n * Vt));
+                    const I_diode = isc * (expTerm - 1) * I0_normalized;
+                    const I_shunt = Vd / Rsh;
+                    const I_new = isc - I_diode - I_shunt;
+                    
+                    if (Math.abs(I_new - I) < 1e-6) break;
+                    I = Math.max(0, I_new);
+                }
+                
+                currents.push(I);
+                powers.push(v * I);
+            }
+            
+            const ctx = document.getElementById('ivChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                return;
+            }
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: voltages.map(v => v.toFixed(2)),
+                    datasets: [
+                        {
+                            label: 'جریان (A)',
+                            data: currents,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            yAxisID: 'y',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'توان (W)',
+                            data: powers,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 14
+                                },
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                family: 'Vazirmatn',
+                                size: 14
+                            },
+                            bodyFont: {
+                                family: 'Vazirmatn',
+                                size: 13
+                            },
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                title: function(context) {
+                                    return 'ولتاژ: ' + context[0].label + ' V';
+                                },
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y.toFixed(3);
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'ولتاژ (V)',
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Vazirmatn'
+                                },
+                                maxTicksLimit: 10
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'جریان (A)',
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#3b82f6'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Vazirmatn'
+                                },
+                                color: '#3b82f6'
+                            },
+                            grid: {
+                                color: 'rgba(59, 130, 246, 0.1)'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'توان (W)',
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                color: '#22c55e'
+                            },
+                            ticks: {
+                                font: {
+                                    family: 'Vazirmatn'
+                                },
+                                color: '#22c55e'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Main Simulation Function
+        async function simulateSystem(lat, lon, angle, date, time) {
+            try {
+                const [hours, minutes] = time.split(':').map(Number);
+                
+                // Calculate solar position
+                const solarPosition = calculateSolarPosition(lat, lon, date, hours, minutes);
+                
+                // Default weather values
+                let ambientTemp = 25;
+                let humidity = 50;
+                let windSpeed = 1;
+                let totalIrradiance = 0;
+                
+                // Fetch weather data
+                try {
+                    const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m&timezone=auto`);
+                    const weatherData = await weatherResponse.json();
+                    
+                    if (weatherData.current) {
+                        ambientTemp = weatherData.current.temperature_2m || ambientTemp;
+                        humidity = weatherData.current.relative_humidity_2m || humidity;
+                        windSpeed = weatherData.current.wind_speed_10m || windSpeed;
+                    }
+                } catch (weatherError) {
+                    console.log('Using default weather data');
+                }
+                
+                // Check if it's nighttime
+                if (solarPosition.elevation <= 0) {
+                    displayNightResults(ambientTemp, humidity, windSpeed, solarPosition);
+                    return;
+                }
+                
+                // Calculate irradiance
+                const clearSkyIrradiance = 1367 * Math.sin(solarPosition.elevation * Math.PI / 180);
+                totalIrradiance = clearSkyIrradiance * 0.7; // Approximate atmospheric losses
+                
+                const radiation = calculateRadiation(solarPosition, angle, totalIrradiance);
+                
+                // Panel specifications (65W polycrystalline)
+                const panelArea = 0.55; // m²
+                
+                // Calculate cooling with energy balance
+                const cooling = calculateCoolingEnergyBalance(radiation.total, ambientTemp, windSpeed, panelArea);
+                
+                // Panel electrical parameters
+                const stc_voc = 21.5;
+                const stc_isc = 4.0;
+                
+                // Temperature and irradiance corrections
+                const vocTempCoeff = -0.0035;
+                const iscTempCoeff = 0.0004;
+                
+                const irradianceFactor = radiation.total / 1000;
+                
+                const voc = stc_voc * (1 + vocTempCoeff * (cooling.panelTemp - 25)) * 
+                           (1 + 0.0005 * Math.log(Math.max(0.01, irradianceFactor)));
+                const isc = stc_isc * irradianceFactor * (1 + iscTempCoeff * (cooling.panelTemp - 25));
+                
+                // Calculate MPPT
+                const mpptResult = calculateMPPT(voc, isc, cooling.panelTemp);
+                
+                // Apply electrical efficiency from energy balance
+                const eta_elec_corrected = Math.max(0, Math.min(cooling.eta_elec, 0.22));
+                const pmpp = Math.max(0, mpptResult.power * (eta_elec_corrected / 0.20));
+                
+                // Display results
+                displayResults(ambientTemp, humidity, windSpeed, radiation, solarPosition, 
+                              cooling, mpptResult, pmpp, voc, isc, panelArea);
+                
+            } catch (error) {
+                console.error('Simulation error:', error);
+                showError('خطا در محاسبات. لطفاً مجدداً تلاش کنید.');
+            }
+        }
+
+        function displayNightResults(temp, humidity, wind, solarPos) {
+            document.getElementById('temp').textContent = temp.toFixed(1) + ' °C';
+            document.getElementById('humidity').textContent = humidity.toFixed(0) + ' %';
+            document.getElementById('windSpeed').textContent = wind.toFixed(1) + ' m/s';
+            document.getElementById('irradiance').textContent = '0 W/m²';
+            
+            document.getElementById('directIrradiance').textContent = '0 W/m²';
+            document.getElementById('diffuseIrradiance').textContent = '0 W/m²';
+            document.getElementById('solarAngle').textContent = solarPos.elevation.toFixed(1) + ' °';
+            document.getElementById('solarAzimuth').textContent = solarPos.azimuth.toFixed(1) + ' °';
+            
+            document.getElementById('waterTempIn').textContent = 'غیرفعال';
+            document.getElementById('waterTempOut').textContent = 'غیرفعال';
+            document.getElementById('flowRate').textContent = 'غیرفعال';
+            document.getElementById('panelTemp').textContent = temp.toFixed(1) + ' °C';
+            
+            document.getElementById('solarEnergy').textContent = '0 W';
+            document.getElementById('heatLoss').textContent = '0 W';
+            document.getElementById('waterCooling').textContent = '0 W';
+            document.getElementById('thermalPower').textContent = '0 W';
+            document.getElementById('thermalEfficiency').textContent = '0.0 %';
+            
+            document.getElementById('maxPower').textContent = '0.00 W';
+            document.getElementById('mpptVoltage').textContent = '0.00 V';
+            document.getElementById('mpptCurrent').textContent = '0.00 A';
+            document.getElementById('electricalEfficiency').textContent = '0.0 %';
+            
+            drawIVCurve(0.01, 0.01, 0, 0, 0, temp);
+        }
+
+        function displayResults(temp, humidity, wind, radiation, solarPos, cooling, mppt, pmpp, voc, isc, panelArea) {
+            document.getElementById('temp').textContent = temp.toFixed(1) + ' °C';
+            document.getElementById('humidity').textContent = humidity.toFixed(0) + ' %';
+            document.getElementById('windSpeed').textContent = wind.toFixed(1) + ' m/s';
+            document.getElementById('irradiance').textContent = radiation.total.toFixed(0) + ' W/m²';
+            
+            document.getElementById('directIrradiance').textContent = radiation.direct.toFixed(0) + ' W/m²';
+            document.getElementById('diffuseIrradiance').textContent = radiation.diffuse.toFixed(0) + ' W/m²';
+            document.getElementById('solarAngle').textContent = solarPos.elevation.toFixed(1) + ' °';
+            document.getElementById('solarAzimuth').textContent = solarPos.azimuth.toFixed(1) + ' °';
+            
+            if (cooling.active) {
+                document.getElementById('waterTempIn').textContent = cooling.waterTempIn.toFixed(1) + ' °C';
+                document.getElementById('waterTempOut').textContent = cooling.waterTempOut.toFixed(1) + ' °C';
+                document.getElementById('flowRate').textContent = cooling.flowRate.toFixed(2) + ' L/min';
+            } else {
+                document.getElementById('waterTempIn').textContent = 'غیرفعال';
+                document.getElementById('waterTempOut').textContent = 'غیرفعال';
+                document.getElementById('flowRate').textContent = 'غیرفعال';
+            }
+            document.getElementById('panelTemp').textContent = cooling.panelTemp.toFixed(1) + ' °C';
+            
+            document.getElementById('solarEnergy').textContent = cooling.Q_solar.toFixed(1) + ' W';
+            document.getElementById('heatLoss').textContent = cooling.Q_loss.toFixed(1) + ' W';
+            document.getElementById('waterCooling').textContent = cooling.Q_cooling.toFixed(1) + ' W';
+            
+            // Display thermal power and efficiency
+            if (cooling.active) {
+                document.getElementById('thermalPower').textContent = cooling.Q_thermal.toFixed(2) + ' W';
+                document.getElementById('thermalEfficiency').textContent = cooling.eta_thermal.toFixed(1) + ' %';
+            } else {
+                document.getElementById('thermalPower').textContent = '0.00 W';
+                document.getElementById('thermalEfficiency').textContent = '0.0 %';
+            }
+            
+            document.getElementById('maxPower').textContent = pmpp.toFixed(2) + ' W';
+            document.getElementById('mpptVoltage').textContent = mppt.voltage.toFixed(2) + ' V';
+            document.getElementById('mpptCurrent').textContent = mppt.current.toFixed(2) + ' A';
+            
+            const inputPower = radiation.total * panelArea;
+            const electricalEff = inputPower > 0 ? (pmpp / inputPower) * 100 : 0;
+            document.getElementById('electricalEfficiency').textContent = electricalEff.toFixed(1) + ' %';
+            
+            drawIVCurve(voc, isc, mppt.voltage, mppt.current, pmpp, cooling.panelTemp);
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        // Form submission handler
+        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingState = document.getElementById('loadingState');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'در حال پردازش...';
+            loadingState.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const panelAngle = parseFloat(document.getElementById('panelAngle').value);
+            const date = new Date(document.getElementById('date').value);
+            const time = document.getElementById('time').value;
+            
+            try {
+                await simulateSystem(latitude, longitude, panelAngle, date, time);
+                
+                // Scroll to results section smoothly
+                setTimeout(() => {
+                    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            } catch (error) {
+                console.error('Simulation error:', error);
+                showError('خطا در محاسبات. لطفاً مجدداً تلاش کنید.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'محاسبه و شبیه‌سازی';
+                loadingState.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+            }
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ae0c19d60f7e6d0',t:'MTc2NTc0NzM0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
